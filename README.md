@@ -13,9 +13,9 @@ Follow along: [LinkedIn](https://www.linkedin.com/in/aswad-ayaz/)
 |---|-------|-------|
 | 01 | First Pipeline — Build & Test | [View](./01-first-pipeline.md) |
 | 02 | Second Secrets, variables and enviroenment | [View](./02-secrets-variables-environments.md) 
-| 02 | SonarQube Code Quality | Coming Soon |
-| 03 | Docker Build & Push | Coming Soon |
-| 04 | AWS Deployment | Coming Soon |
+| 03 | Third Triggers And Inputs | [View](./03-triggers-and-inputs.md)
+| 04 | Docker Build & Push | Coming Soon |
+| 05 | AWS Deployment | Coming Soon |
 
 ---
 
