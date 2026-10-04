@@ -16,6 +16,7 @@ Follow along: [LinkedIn](https://www.linkedin.com/in/aswad-ayaz/)
 | 03 | Third Triggers And Inputs | [View](./03-triggers-and-inputs.md)
 | 04 | Forth Artifacts, Permissions And Conditions |  [View](./04-artifacts-conditions-permissions.md)
 | 05 | Security Scan With Trivy |  [View](./05-security-scanning-trivy.md)
+| 06 | Build and push docker image to aws ecr |  [View](./06-build-and-push-image-to-ecr.md)
 
 ---
 
