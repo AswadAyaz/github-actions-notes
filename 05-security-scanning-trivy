@@ -1,0 +1,136 @@
+# Security Scanning With Trivy
+security scan on our artifact.
+
+aqua security is a company which builds os tools we are using aqua security trivy for our pipeline. trivy is used for security scanning like scan our docker images, repo, file system, git repo is there any vulnerability any security issue.
+
+search in github market place aqua security trivy.
+
+
+name: Build Wf
+
+on:
+  push:
+    branches: ["main", "docker", "local"]
+
+  pull_request:
+    branches: ["main"]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Maven Build
+        if: github.ref == 'refs/heads/main'
+        run: mvn clean install -DskipTests
+
+      - name: Upload build artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v6
+        with:
+          name: vprofile-artifact
+          path: target/*.war
+
+      - name: run build on other branches
+        if: github.ref != 'refs/heads/main'
+        run: echo "Build is skipped for non-main branches."
+
+      - name: Notify if build fails
+        if: failure()
+        run: echo "Build failed. Please check the logs for details."
+
+  testing:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Run tests on main branch
+        if: github.ref == 'refs/heads/main'
+        run: mvn test
+
+      - name: checkstyle
+        if: github.ref == 'refs/heads/main'
+        run: mvn checkstyle:checkstyle
+
+      - name: Run tests on other branches
+        if: github.ref != 'refs/heads/main'
+        run: echo "Tests are skipped for non-main branches."
+
+  security_scan:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Run trivy filesystem scan
+        uses: aquasecurity/trivy-action@v0.36.0 => prebuilt action
+        with:
+          scan-type: fs => filesystem type 
+          scan-ref: . => this means current working directory that includes our sourcecode and every thing in it.
+          format: table => format will be in table format you can choose json also.
+          exit-code: 0 => that means if vulnerabilities are found the workflow should not be stopped if you give 1 then if some vulnerabilities are founded workflow will fail.
+          vuln-type: os,library => these are 2 common vulnerabilities types.
+          output: trivy-result.table => this will be the file name
+
+      - name: Upload trivy scan result as artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: trivy-scan-result 
+          path: trivy-result.table
+
+Here in upload artifact we are storing the file as an artifact. 
+
+############################
+ Output Will be like this. in the file.
+
+Report Summary
+
+┌─────────┬──────┬─────────────────┬─────────┐
+│ Target  │ Type │ Vulnerabilities │ Secrets │
+├─────────┼──────┼─────────────────┼─────────┤
+│ pom.xml │ pom  │       59        │    -    │
+└─────────┴──────┴─────────────────┴─────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+For OSS Maintainers: VEX Notice
+--------------------------------
+If you're an OSS maintainer and Trivy has detected vulnerabilities in your project that you believe are not actually exploitable, consider issuing a VEX (Vulnerability Exploitability eXchange) statement.
+VEX allows you to communicate the actual status of vulnerabilities in your project, improving security transparency and reducing false positives for your users.
+Learn more and start using VEX: https://trivy.dev/docs/v0.70/guide/supply-chain/vex/repo#publishing-vex-documents
+
+To disable this notice, set the TRIVY_DISABLE_VEX_NOTICE environment variable.
+
+
+pom.xml (pom)
+=============
+Total: 59 (UNKNOWN: 0, LOW: 6, MEDIUM: 31, HIGH: 20, CRITICAL: 2)
+
+┌─────────────────────────────────────────────────────┬────────────────┬──────────┬──────────┬───────────────────┬──────────────────────────────────────────────┬──────────────────────────────────────────────────────────────┐
+│                       Library                       │ Vulnerability  │ Severity │  Status  │ Installed Version │                Fixed Version                 │                            Title                             │
+├─────────────────────────────────────────────────────┼────────────────┼──────────┼──────────┼───────────────────┼──────────────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ ch.qos.logback:logback-core                         │ CVE-2024-12798 │ MEDIUM   │ fixed    │ 1.5.6             │ 1.5.13, 1.3.15                               │ logback-core: arbitrary code execution via                   │
+│                                                     │                │          │          │                   │                                              │ JaninoEventEvaluator 
